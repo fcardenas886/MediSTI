@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="MediSTI.Views.PacientesPage"
+             Title="Mis Pacientes"
+             BackgroundColor="#F5F5F5">
+
+    <Grid RowDefinitions="Auto, *, Auto" Padding="20">
+
+        <!-- Título de Sección -->
+        <Label Grid.Row="0" 
+               Text="Directorio de Pacientes" 
+               FontSize="24" 
+               FontAttributes="Bold" 
+               TextColor="#2196F3"
+               Margin="0,0,0,20"/>
+
+        <!-- Lista de Pacientes -->
+        <CollectionView Grid.Row="1" 
+                        ItemsSource="{Binding Pacientes}"
+                        SelectionMode="None">
+
+            <!-- Vista si la lista está vacía -->
+            <CollectionView.EmptyView>
+                <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="10">
+                    <Label Text="No hay pacientes registrados" TextColor="Gray" HorizontalOptions="Center"/>
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Border StrokeShape="RoundRectangle 15" 
+                            Margin="0,0,0,12" 
+                            Padding="15" 
+                            BackgroundColor="White"
+                            StrokeThickness="0">
+                        
+                        <!-- Hacemos que toda la tarjeta sea "clicable" -->
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnPacienteTapped" />
+                        </Border.GestureRecognizers>
+                        <HorizontalStackLayout Spacing="15">
+                            <Label Text="👤" FontSize="26" VerticalOptions="Center"/>
+                            <VerticalStackLayout VerticalOptions="Center">
+                                <Label Text="{Binding Nombre}" FontAttributes="Bold" FontSize="18"/>
+                                <Label Text="{Binding Telefono}" FontSize="14" TextColor="#2196F3"/>
+                            </VerticalStackLayout>
+                        </HorizontalStackLayout>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <!-- Botón Agregar (Evento Directo Clicked) -->
+        <Button Grid.Row="2"
+                Text="+ Nuevo Paciente"
+                Clicked="OnAgregarPacienteClicked"
+                BackgroundColor="#2196F3"
+                TextColor="White"
+                HeightRequest="55"
+                CornerRadius="10"
+                FontAttributes="Bold"
+                Margin="0,10,0,0"/>
+    </Grid>
+</ContentPage>

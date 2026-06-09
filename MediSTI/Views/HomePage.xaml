@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:MediSTI.ViewModels"
+             xmlns:models="clr-namespace:MediSTI.Models"
+             x:Class="MediSTI.Views.HomePage"
+             Title="MediSTI - Inicio"
+             x:DataType="vm:MainViewModel"
+             BackgroundColor="#F8F9FA">
+
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*" 
+          Padding="20" 
+          RowSpacing="15">
+
+        <Label x:Name="VersionLabel" Grid.Row="0" FontSize="10" TextColor="Gray" HorizontalOptions="End"/>
+
+        <Border x:Name="MostrarBannerPermisos" Grid.Row="1" IsVisible="False" BackgroundColor="Orange" StrokeShape="RoundRectangle 10">
+            <VerticalStackLayout Padding="12">
+                <Label Text="⚠️ Configura permisos de notificaciones" FontAttributes="Bold" TextColor="Black"/>
+                <Button Text="Configurar ahora" Clicked="OnConfigurarPermisos" Margin="0,8,0,0"/>
+            </VerticalStackLayout>
+        </Border>
+
+        <VerticalStackLayout Grid.Row="2" Spacing="5" HorizontalOptions="Center">
+            <Image Source="dotnet_bot.png" HeightRequest="80" />
+            <Label Text="¿Qué necesitas recordar?" FontSize="20" FontAttributes="Bold" />
+        </VerticalStackLayout>
+
+        <Border Grid.Row="3" StrokeShape="RoundRectangle 20" BackgroundColor="#2196F3" HeightRequest="60">
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding AlarmaRapidaCommand}"/>
+            </Border.GestureRecognizers>
+            <HorizontalStackLayout Spacing="10" HorizontalOptions="Center" VerticalOptions="Center">
+                <Label Text="⏰" FontSize="24"/>
+                <Label Text="ALARMA EXPRESS" TextColor="White" FontAttributes="Bold" FontSize="18"/>
+            </HorizontalStackLayout>
+        </Border>
+
+        <Border Grid.Row="4" StrokeShape="RoundRectangle 16" BackgroundColor="White" Stroke="#E0E0E0" Padding="12">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <Label Grid.Column="0" Text="⏳" FontSize="28" VerticalOptions="Center"/>
+                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Margin="10,0">
+                    <Label Text="{Binding ProximoTexto}" FontAttributes="Bold" FontSize="14"/>
+                    <Label Text="{Binding CuentaRegresiva}" FontSize="20" FontAttributes="Bold" TextColor="#1E88E5"/>
+                </VerticalStackLayout>
+                <Button Grid.Column="2" Text="Agenda" Command="{Binding VerAgendaCompletaCommand}" FontSize="10" VerticalOptions="Center"/>
+            </Grid>
+        </Border>
+
+        <Label Grid.Row="5" Text="📅 Próximas tomas de hoy" FontSize="18" FontAttributes="Bold" />
+
+        <CollectionView Grid.Row="6" ItemsSource="{Binding TomasDeHoy}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:TomaDelDia">
+                    <Border Padding="14" Margin="0,6" BackgroundColor="White" Stroke="#E0E0E0" StrokeShape="RoundRectangle 14">
+                        <Grid ColumnDefinitions="*,Auto">
+
+                            <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                <Label Text="{Binding MedicamentoNombre}" FontAttributes="Bold" FontSize="16" TextColor="#185FA5"/>
+                                <Label Text="{Binding NombrePaciente, StringFormat='Paciente: {0}'}" FontSize="12" TextColor="#777"/>
+                                <Label Text="{Binding Dosis, StringFormat='Dosis: {0}'}" FontSize="12" FontAttributes="Italic"/>
+                            </VerticalStackLayout>
+
+                            <VerticalStackLayout Grid.Column="1" HorizontalOptions="End" VerticalOptions="Center">
+                                <Label Text="{Binding HoraFormateada}" FontSize="20" FontAttributes="Bold" TextColor="{Binding ColorEstado}" HorizontalOptions="End"/>
+                                <Label Text="{Binding TiempoRestante}" FontSize="13" TextColor="Red" FontAttributes="Bold" HorizontalOptions="End"/>
+                                <Label Text="{Binding IconoEstado}" FontSize="18" HorizontalOptions="End" Margin="0,2,0,0"/>
+                            </VerticalStackLayout>
+
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>

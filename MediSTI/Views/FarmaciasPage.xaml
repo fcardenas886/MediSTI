@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="MediSTI.Views.FarmaciasPage"
+             Title="FarmaciasPage">
+    <Grid RowDefinitions="Auto, *">
+        <!-- Buscador por Comuna -->
+        <SearchBar x:Name="searchBar" 
+                   Placeholder="Buscar comuna (ej: Loncoche...)"
+                   SearchButtonPressed="OnSearchButtonPressed"
+                   TextColor="#1967B3"
+                   Margin="10"/>
+
+        <CollectionView Grid.Row="1" x:Name="listFarmacias" Margin="10">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Frame BorderColor="#1967B3" CornerRadius="10" Margin="0,5" Padding="15" HasShadow="True">
+                        <VerticalStackLayout Spacing="5">
+                            <Label Text="{Binding local_nombre}" FontSize="18" FontAttributes="Bold" TextColor="#1967B3"/>
+                            <Label Text="{Binding local_direccion}" FontSize="14" TextColor="Black"/>
+                            <HorizontalStackLayout Spacing="10">
+                                <Label Text="📞" />
+                                <Label Text="{Binding local_telefono}" TextColor="Gray"/>
+                            </HorizontalStackLayout>
+
+                            <Button Text="Ver en Mapa" 
+                                    Clicked="OnVerMapaClicked"
+                                    CommandParameter="{Binding .}"
+                                    BackgroundColor="#1967B3" 
+                                    TextColor="White"
+                                    HeightRequest="40"
+                                    Margin="0,10,0,0"/>
+                        </VerticalStackLayout>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <!-- Indicador de carga -->
+        <ActivityIndicator x:Name="loadingIndicator" IsRunning="True" Grid.Row="1"
+                           VerticalOptions="Center" HorizontalOptions="Center" 
+                           Color="#1967B3" IsVisible="False"/>
+    </Grid>
+</ContentPage>

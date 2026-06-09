@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.sti.medesti">
+	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+	<uses-permission android:name="android.permission.INTERNET" />
+	<!-- Permiso para mostrar notificaciones (Android 13+) -->
+	<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+	<!-- Permiso para programar alarmas exactas (Android 12+) -->
+	<uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+	<!-- Necesario para que la alarma suene incluso si el teléfono está en reposo -->
+	<uses-permission android:name="android.permission.WAKE_LOCK" />
+	<uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+	<uses-permission android:name="android.permission.VIBRATE" />
+	<application android:allowBackup="true" android:icon="@mipmap/appicon" android:supportsRtl="true" android:usesCleartextTraffic="true" android:label="MediSTI">
+		<receiver android:name="plugin.LocalNotification.GeofenceTransitionsIntentReceiver" android:enabled="true" android:exported="false" />
+		<receiver android:name="plugin.LocalNotification.NotificationActionReceiver" android:enabled="true" android:exported="false" />
+		<receiver android:name="plugin.LocalNotification.ScheduledAlarmReceiver" android:enabled="true" android:exported="false" />
+	</application>
+</manifest>

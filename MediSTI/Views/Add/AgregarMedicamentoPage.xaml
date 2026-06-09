@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="MediSTI.Views.Add.AgregarMedicamentoPage"
+             Title="Nuevo Medicamento"
+             BackgroundColor="#F5F5F5">
+
+    <VerticalStackLayout Padding="20" Spacing="15" BackgroundColor="White">
+        <!-- Encabezado Azul -->
+        <Frame BackgroundColor="#1967B3" Padding="15" CornerRadius="10" HasShadow="False">
+            <HorizontalStackLayout Spacing="10">
+                <Label Text="💊" FontSize="20"/>
+                <Label Text="Registro de Medicamento" TextColor="White" FontAttributes="Bold" VerticalOptions="Center"/>
+            </HorizontalStackLayout>
+        </Frame>
+
+        <!-- Campos de Texto -->
+        <Label Text="Nombre del medicamento" FontSize="12" FontAttributes="Bold"/>
+        <Entry x:Name="txtNombre" Placeholder="Paracetamol" />
+
+        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+            <VerticalStackLayout Grid.Column="0" Spacing="5">
+                <Label Text="Dosis" FontSize="12" FontAttributes="Bold"/>
+                <Entry x:Name="txtDosis" Placeholder="500mg" />
+            </VerticalStackLayout>
+            <VerticalStackLayout Grid.Column="1" Spacing="5">
+                <Label Text="Frecuencia" FontSize="12" FontAttributes="Bold"/>
+                <Entry x:Name="txtFrecuencia" Placeholder="Cada 8 horas"  TextChanged="OnFrecuenciaChanged" Unfocused="OnFrecuenciaChanged" />
+            </VerticalStackLayout>
+        </Grid>
+
+        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+            <VerticalStackLayout Grid.Column="0" Spacing="5">
+                <Label Text="Fecha inicio" FontSize="12" FontAttributes="Bold"/>
+                <DatePicker x:Name="dpInicio" Format="dd/MM/yyyy" />
+            </VerticalStackLayout>
+            <VerticalStackLayout Grid.Column="1" Spacing="5">
+                <Label Text="Fecha fin" FontSize="12" FontAttributes="Bold"/>
+                <DatePicker x:Name="dpFin" Format="dd/MM/yyyy" />
+            </VerticalStackLayout>
+        </Grid>
+
+        <!-- Sección de Horarios Automáticos -->
+        <Label Text="Hora de primera toma" FontSize="12" FontAttributes="Bold" TextColor="#1967B3"/>
+        <TimePicker x:Name="tpPrimeraToma" PropertyChanged="OnPrimeraTomaChanged" />
+
+        <FlexLayout x:Name="flexHoras" Wrap="Wrap" Direction="Row" Margin="0,5" />
+
+        <!-- Días de la semana -->
+        <Grid ColumnDefinitions="*, Auto">
+            <Label Text="Días específicos" VerticalOptions="Center" FontAttributes="Bold" FontSize="12" TextColor="Gray"/>
+            <Switch Grid.Column="1" IsToggled="True" x:Name="swDias" />
+        </Grid>
+
+        <HorizontalStackLayout Spacing="8" x:Name="stackDias">
+            <!-- Se agrega Clicked y se definen propiedades básicas para evitar el crash por falta de Style -->
+            <Button Text="Lu" Clicked="OnDayButtonClicked" WidthRequest="45" HeightRequest="45" CornerRadius="22" BackgroundColor="#1967B3" TextColor="White" />
+            <Button Text="Ma" Clicked="OnDayButtonClicked" WidthRequest="45" HeightRequest="45" CornerRadius="22" BackgroundColor="#1967B3" TextColor="White" />
+            <Button Text="Mi" Clicked="OnDayButtonClicked" WidthRequest="45" HeightRequest="45" CornerRadius="22" BackgroundColor="#1967B3" TextColor="White" />
+            <Button Text="Ju" Clicked="OnDayButtonClicked" WidthRequest="45" HeightRequest="45" CornerRadius="22" BackgroundColor="#1967B3" TextColor="White" />
+            <Button Text="Vi" Clicked="OnDayButtonClicked" WidthRequest="45" HeightRequest="45" CornerRadius="22" BackgroundColor="#1967B3" TextColor="White" />
+            <Button Text="Sa" Clicked="OnDayButtonClicked" WidthRequest="45" HeightRequest="45" CornerRadius="22" BackgroundColor="White" TextColor="Gray" BorderColor="Gray" BorderWidth="1" />
+            <Button Text="Do" Clicked="OnDayButtonClicked" WidthRequest="45" HeightRequest="45" CornerRadius="22" BackgroundColor="White" TextColor="Gray" BorderColor="Gray" BorderWidth="1" />
+        </HorizontalStackLayout>
+        <!-- Botones de Acción -->
+        <Button Text="Guardar medicamento" BackgroundColor="#1967B3" TextColor="White" CornerRadius="10" HeightRequest="50" Clicked="OnGuardarClicked"/>
+        <Button Text="Cancelar" BackgroundColor="Transparent" BorderColor="Gray" BorderWidth="1" TextColor="Gray" CornerRadius="10" Clicked="OnCancelarClicked"/>
+    </VerticalStackLayout>
+
+</ContentPage>

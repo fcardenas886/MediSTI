@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="MediSTI.Views.AgregarPacientesPage"
+             Title="Nuevo Registro">
+
+    <VerticalStackLayout Padding="30" Spacing="15" VerticalOptions="Center">
+        <Label Text="👤 Nuevo Paciente" 
+               FontSize="26" 
+               FontAttributes="Bold" 
+               TextColor="#2196F3" 
+               HorizontalOptions="Center" 
+               Margin="0,0,0,20"/>
+
+        <Entry x:Name="txtNombre" 
+               Placeholder="Nombre completo" 
+               FontSize="18"/>
+
+        <Entry x:Name="txtTelefono" 
+               Placeholder="Teléfono de contacto" 
+               Keyboard="Telephone" 
+               FontSize="18"/>
+
+        <VerticalStackLayout Spacing="5" Margin="0,10,0,0">
+            <Label Text="Fecha de Nacimiento" TextColor="Gray"/>
+            <DatePicker x:Name="dtpFecha" Format="dd/MM/yyyy"/>
+        </VerticalStackLayout>
+
+        <Button Text="Guardar Paciente" 
+                Clicked="OnGuardarClicked" 
+                BackgroundColor="#2196F3" 
+                TextColor="White"
+                HeightRequest="55"
+                Margin="0,30,0,10"
+                CornerRadius="10"/>
+
+        <Button Text="Cancelar" 
+                Clicked="OnCancelarClicked" 
+                BackgroundColor="Transparent" 
+                TextColor="Gray"
+                BorderColor="Gray"
+                BorderWidth="1"
+                HeightRequest="50"
+                CornerRadius="10"/>
+    </VerticalStackLayout>
+</ContentPage>
