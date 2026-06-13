@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFrameworks>net10.0-android</TargetFrameworks>
@@ -34,8 +34,8 @@
 		<ApplicationId>com.companyname.medisti</ApplicationId>
 
 		<!-- Versions -->
-		<ApplicationDisplayVersion>1.6</ApplicationDisplayVersion>
-		<ApplicationVersion>6</ApplicationVersion>
+		<ApplicationDisplayVersion>1.15</ApplicationDisplayVersion>
+		<ApplicationVersion>15</ApplicationVersion>
 
 		<!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
 		<WindowsPackageType>None</WindowsPackageType>
@@ -48,43 +48,43 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net10.0-android|AnyCPU'">
-	  <ApplicationDisplayVersion>1.7</ApplicationDisplayVersion>
-	  <ApplicationVersion>7</ApplicationVersion>
+	  <ApplicationDisplayVersion>1.15</ApplicationDisplayVersion>
+	  <ApplicationVersion>15</ApplicationVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net10.0-ios|AnyCPU'">
-	  <ApplicationDisplayVersion>1.7</ApplicationDisplayVersion>
-	  <ApplicationVersion>7</ApplicationVersion>
+	  <ApplicationDisplayVersion>1.15</ApplicationDisplayVersion>
+	  <ApplicationVersion>15</ApplicationVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net10.0-maccatalyst|AnyCPU'">
-	  <ApplicationDisplayVersion>1.7</ApplicationDisplayVersion>
-	  <ApplicationVersion>7</ApplicationVersion>
+	  <ApplicationDisplayVersion>1.15</ApplicationDisplayVersion>
+	  <ApplicationVersion>15</ApplicationVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net10.0-windows10.0.19041.0|AnyCPU'">
-	  <ApplicationDisplayVersion>1.7</ApplicationDisplayVersion>
-	  <ApplicationVersion></ApplicationVersion>
+	  <ApplicationDisplayVersion>1.15</ApplicationDisplayVersion>
+	  <ApplicationVersion>15</ApplicationVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net10.0-android|AnyCPU'">
-	  <ApplicationDisplayVersion>1.7</ApplicationDisplayVersion>
-	  <ApplicationVersion>7</ApplicationVersion>
+	  <ApplicationDisplayVersion>1.15</ApplicationDisplayVersion>
+	  <ApplicationVersion>15</ApplicationVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net10.0-ios|AnyCPU'">
-	  <ApplicationDisplayVersion>1.7</ApplicationDisplayVersion>
-	  <ApplicationVersion>7</ApplicationVersion>
+	  <ApplicationDisplayVersion>1.15</ApplicationDisplayVersion>
+	  <ApplicationVersion>15</ApplicationVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net10.0-maccatalyst|AnyCPU'">
-	  <ApplicationDisplayVersion>1.7</ApplicationDisplayVersion>
-	  <ApplicationVersion>7</ApplicationVersion>
+	  <ApplicationDisplayVersion>1.15</ApplicationDisplayVersion>
+	  <ApplicationVersion>15</ApplicationVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net10.0-windows10.0.19041.0|AnyCPU'">
-	  <ApplicationDisplayVersion>1.7</ApplicationDisplayVersion>
-	  <ApplicationVersion>7</ApplicationVersion>
+	  <ApplicationDisplayVersion>1.15</ApplicationDisplayVersion>
+	  <ApplicationVersion>15</ApplicationVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -106,11 +106,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <AndroidResource Remove="Platforms\Android\Resources\raw\alarm1.m4a" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <None Remove="Platforms\Android\Resources\raw\absolute.mp3" />
+		<AndroidResource Include="Platforms\Android\Resources\raw\absolute.mp3" />
+		<AndroidResource Include="Platforms\Android\Resources\raw\alarm1.m4a" />
+		<AndroidResource Include="Platforms\Android\Resources\raw\reloj.mp3" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -125,6 +123,9 @@
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Views\AgregarPacientesPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\DiagnosticoPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Views\FarmaciasPage.xaml">

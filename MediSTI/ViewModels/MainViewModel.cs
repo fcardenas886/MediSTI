@@ -1,4 +1,4 @@
-﻿using MediSTI.Data;
+using MediSTI.Data;
 using MediSTI.Models;
 
 using Plugin.LocalNotification;
@@ -37,6 +37,27 @@ namespace MediSTI.ViewModels
             set { _cuentaRegresiva = value; OnPropertyChanged(); }
         }
 
+        private double _progresoTomas = 0;
+        public double ProgresoTomas
+        {
+            get => _progresoTomas;
+            set { _progresoTomas = value; OnPropertyChanged(); }
+        }
+
+        private string _progresoTexto = "0% completado";
+        public string ProgresoTexto
+        {
+            get => _progresoTexto;
+            set { _progresoTexto = value; OnPropertyChanged(); }
+        }
+
+        private bool _tieneTomas = false;
+        public bool TieneTomas
+        {
+            get => _tieneTomas;
+            set { _tieneTomas = value; OnPropertyChanged(); }
+        }
+
         private IDispatcherTimer _timer;
 
         public MainViewModel(DatabaseService dbService)
@@ -44,7 +65,7 @@ namespace MediSTI.ViewModels
             _dbService = dbService;
 
             AlarmaRapidaCommand = new Command(async () => await EjecutarAlarmaRapida());
-            //MarcarTomadaCommand = new Command<TomaDelDia>(async t => await MarcarComoTomadaAsync(t));
+            MarcarTomadaCommand = new Command<TomaDelDia>(async t => await MarcarComoTomadaAsync(t));
             VerAgendaCompletaCommand = new Command(async () => await Shell.Current.GoToAsync("//Historial"));
             IrAPacientesCommand = new Command(async () => await Shell.Current.GoToAsync("//Pacientes"));
             IrAMedicinasCommand = new Command(async () => await Shell.Current.GoToAsync("//Medicamentos"));
@@ -60,14 +81,39 @@ namespace MediSTI.ViewModels
         {
             var lista = await _dbService.GetTomasDeHoyAsync();
 
+            // 1. Calcular Progreso de Adherencia Diaria usando la lista completa de hoy
+            int total = lista.Count;
+            int completadas = lista.Count(t => t.YaTomada);
+
+            // 2. Filtrar únicamente las próximas 2 tomas pendientes del día
+            var proximasTomas = lista.Where(t => !t.YaTomada)
+                                     .OrderBy(t => t.Hora)
+                                     .Take(2)
+                                     .ToList();
+
             // Ejecutamos en el hilo principal para asegurar que la UI reaccione
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 TomasDeHoy.Clear();
-                foreach (var toma in lista)
+                foreach (var toma in proximasTomas)
                 {
                     TomasDeHoy.Add(toma);
                 }
+
+                if (total > 0)
+                {
+                    TieneTomas = true;
+                    ProgresoTomas = (double)completadas / total;
+                    int porcentaje = (int)Math.Round(ProgresoTomas * 100);
+                    ProgresoTexto = $"{completadas} de {total} tomas completadas ({porcentaje}%)";
+                }
+                else
+                {
+                    TieneTomas = false;
+                    ProgresoTomas = 0;
+                    ProgresoTexto = "Sin tomas agendadas para hoy";
+                }
+
                 // Notificamos explícitamente que la lista cambió
                 OnPropertyChanged(nameof(TomasDeHoy));
             });
@@ -121,7 +167,24 @@ namespace MediSTI.ViewModels
             }
         }
 
+        private async Task MarcarComoTomadaAsync(TomaDelDia toma)
+        {
+            if (toma == null || toma.YaTomada) return;
 
+            var registro = new Registro
+            {
+                HorarioId = toma.HorarioId,
+                FechaHora = DateTime.Now,
+                Estado = "Tomado",
+                Notas = "Registrado desde la pantalla de inicio"
+            };
+
+            await _dbService.SaveRegistroAsync(registro);
+            toma.YaTomada = true;
+            toma.FechaHoraTomada = registro.FechaHora;
+
+            await CargarTomasDeHoyAsync();
+        }
 
         private async Task EjecutarAlarmaRapida()
         {
@@ -165,8 +228,8 @@ namespace MediSTI.ViewModels
                 BadgeNumber = 1,
                 Android = new AndroidOptions
                 {
-                    ChannelId = "medicamentos_channel_v6",
-                    Priority = AndroidPriority.Max,
+                    ChannelId = "medicamentos_channel_gentle_v3",
+                    Priority = AndroidPriority.High,
                     AutoCancel = true,
                 },
                 Schedule = new NotificationRequestSchedule

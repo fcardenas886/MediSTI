@@ -30,28 +30,50 @@ namespace MediSTI.Views
         {
             base.OnAppearing();
 
-            if (_viewModel != null)
+            try
             {
-                // Cargar datos al entrar
-                await _viewModel.CargarTomasDeHoyAsync();
-            }
-
-            // Lógica para Xiaomi y permisos
-#if ANDROID
-            if (DeviceInfo.Current.Manufacturer.ToLower().Contains("xiaomi"))
-            {
-                // Preferences requiere Microsoft.Maui.Storage
-                var yaVio = Preferences.Default.Get("PermisosMostrados", false);
-                if (!yaVio && MostrarBannerPermisos != null)
+                if (_viewModel != null)
                 {
-                    MostrarBannerPermisos.IsVisible = true;
+                    // Cargar datos al entrar
+                    await _viewModel.CargarTomasDeHoyAsync();
                 }
             }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error al cargar tomas de hoy: {ex.Message}");
+            }
+
+            try
+            {
+                // Lógica para Xiaomi y permisos
+#if ANDROID
+                if (DeviceInfo.Current.Manufacturer != null && DeviceInfo.Current.Manufacturer.ToLower().Contains("xiaomi"))
+                {
+                    // Preferences requiere Microsoft.Maui.Storage
+                    var yaVio = Preferences.Default.Get("PermisosMostrados", false);
+                    if (!yaVio && MostrarBannerPermisos != null)
+                    {
+                        MostrarBannerPermisos.IsVisible = true;
+                    }
+                }
 #endif
-            await SolicitarPermisoAlarmaExacta();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error al verificar fabricante: {ex.Message}");
+            }
+
+            try
+            {
+                await SolicitarPermisoAlarmaExacta();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error al solicitar permisos de alarma exacta: {ex.Message}");
+            }
         }
 
-        private void OnConfigurarPermisos(object sender, EventArgs e)
+        private void OnConfigurarPermisos(object? sender, EventArgs e)
         {
 #if ANDROID
             try
@@ -66,10 +88,15 @@ namespace MediSTI.Views
                 if (MostrarBannerPermisos != null)
                     MostrarBannerPermisos.IsVisible = false;
             }
-            catch
+            catch (Exception ex)
             {
-                // Si falla, abrir configuración general
-                AppInfo.Current.ShowSettingsUI();
+                System.Diagnostics.Debug.WriteLine($"Error al abrir autostart: {ex.Message}");
+                try
+                {
+                    // Si falla, abrir configuración general
+                    AppInfo.Current.ShowSettingsUI();
+                }
+                catch { }
             }
 #endif
         }
@@ -77,18 +104,37 @@ namespace MediSTI.Views
         private async Task SolicitarPermisoAlarmaExacta()
         {
 #if ANDROID
-            if (Build.VERSION.SdkInt >= BuildVersionCodes.S)
+            try
             {
-                var alarmManager = Android.App.Application.Context.GetSystemService(Context.AlarmService) as Android.App.AlarmManager;
-                if (alarmManager != null && !alarmManager.CanScheduleExactAlarms())
+                if (Build.VERSION.SdkInt >= BuildVersionCodes.S)
                 {
-                    var intent = new Intent(Settings.ActionRequestScheduleExactAlarm);
-                    intent.SetData(Android.Net.Uri.Parse("package:" + AppInfo.Current.PackageName));
-                    Platform.CurrentActivity?.StartActivity(intent);
+                    var alarmManager = Android.App.Application.Context.GetSystemService(Context.AlarmService) as Android.App.AlarmManager;
+                    if (alarmManager != null && !alarmManager.CanScheduleExactAlarms())
+                    {
+                        var intent = new Intent(Settings.ActionRequestScheduleExactAlarm);
+                        intent.SetData(Android.Net.Uri.Parse("package:" + AppInfo.Current.PackageName));
+                        Platform.CurrentActivity?.StartActivity(intent);
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error al solicitar exact alarms: {ex.Message}");
             }
 #endif
             await Task.CompletedTask;
+        }
+
+        private async void OnDiagnosticoClicked(object? sender, EventArgs e)
+        {
+            try
+            {
+                await Navigation.PushModalAsync(new DiagnosticoPage());
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error al abrir DiagnosticoPage: {ex.Message}");
+            }
         }
     }
 }

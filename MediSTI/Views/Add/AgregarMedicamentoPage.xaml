@@ -52,7 +52,16 @@
             <Switch Grid.Column="1" IsToggled="True" x:Name="swDias" />
         </Grid>
 
-        <HorizontalStackLayout Spacing="8" x:Name="stackDias">
+        <!-- Tipo de Alerta: Alarma Crítica vs Notificación Suave -->
+        <Grid ColumnDefinitions="*, Auto" Margin="0,5">
+            <VerticalStackLayout Grid.Column="0" Spacing="2" VerticalOptions="Center">
+                <Label Text="Alerta de alta prioridad (Alarma)" FontAttributes="Bold" FontSize="12" TextColor="Gray"/>
+                <Label Text="Sonará incluso en modo silencio o no molestar" FontSize="10" TextColor="#888"/>
+            </VerticalStackLayout>
+            <Switch Grid.Column="1" IsToggled="False" x:Name="swEsAlarma" VerticalOptions="Center" />
+        </Grid>
+
+        <HorizontalStackLayout Spacing="8" x:Name="stackDias" IsVisible="{Binding Source={x:Reference swDias}, Path=IsToggled}">
             <!-- Se agrega Clicked y se definen propiedades básicas para evitar el crash por falta de Style -->
             <Button Text="Lu" Clicked="OnDayButtonClicked" WidthRequest="45" HeightRequest="45" CornerRadius="22" BackgroundColor="#1967B3" TextColor="White" />
             <Button Text="Ma" Clicked="OnDayButtonClicked" WidthRequest="45" HeightRequest="45" CornerRadius="22" BackgroundColor="#1967B3" TextColor="White" />

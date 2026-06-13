@@ -29,24 +29,43 @@
 
             <CollectionView.ItemTemplate>
                 <DataTemplate>
-                    <Border StrokeShape="RoundRectangle 15" 
-                            Margin="0,0,0,12" 
-                            Padding="15" 
-                            BackgroundColor="White"
-                            StrokeThickness="0">
-                        
-                        <!-- Hacemos que toda la tarjeta sea "clicable" -->
-                        <Border.GestureRecognizers>
-                            <TapGestureRecognizer Tapped="OnPacienteTapped" />
-                        </Border.GestureRecognizers>
-                        <HorizontalStackLayout Spacing="15">
-                            <Label Text="👤" FontSize="26" VerticalOptions="Center"/>
-                            <VerticalStackLayout VerticalOptions="Center">
-                                <Label Text="{Binding Nombre}" FontAttributes="Bold" FontSize="18"/>
-                                <Label Text="{Binding Telefono}" FontSize="14" TextColor="#2196F3"/>
-                            </VerticalStackLayout>
-                        </HorizontalStackLayout>
-                    </Border>
+                    <SwipeView>
+                        <SwipeView.LeftItems>
+                            <SwipeItems Mode="Reveal">
+                                <SwipeItem Text="Editar"
+                                           BackgroundColor="#FFC107"
+                                           Invoked="OnEditarPacienteInvoked"
+                                           CommandParameter="{Binding .}"/>
+                            </SwipeItems>
+                        </SwipeView.LeftItems>
+                        <SwipeView.RightItems>
+                            <SwipeItems Mode="Reveal">
+                                <SwipeItem Text="Eliminar"
+                                           BackgroundColor="#E74C3C"
+                                           Invoked="OnEliminarPacienteInvoked"
+                                           CommandParameter="{Binding .}"/>
+                            </SwipeItems>
+                        </SwipeView.RightItems>
+
+                        <Border StrokeShape="RoundRectangle 15" 
+                                Margin="0,0,0,12" 
+                                Padding="15" 
+                                BackgroundColor="White"
+                                StrokeThickness="0">
+                            
+                            <!-- Hacemos que toda la tarjeta sea "clicable" -->
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnPacienteTapped" />
+                            </Border.GestureRecognizers>
+                            <HorizontalStackLayout Spacing="15">
+                                <Label Text="👤" FontSize="26" VerticalOptions="Center"/>
+                                <VerticalStackLayout VerticalOptions="Center">
+                                    <Label Text="{Binding Nombre}" FontAttributes="Bold" FontSize="18"/>
+                                    <Label Text="{Binding Telefono}" FontSize="14" TextColor="#2196F3"/>
+                                </VerticalStackLayout>
+                            </HorizontalStackLayout>
+                        </Border>
+                    </SwipeView>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>

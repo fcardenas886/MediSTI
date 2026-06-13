@@ -6,63 +6,89 @@ namespace MediSTI.Views;
 
 public partial class FarmaciasPage : ContentPage
 {
+    private bool _cargada = false;
+
 	public FarmaciasPage()
 	{
 		InitializeComponent();
-		CargarFarmacias("LONCOCHE");
 	}
+
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        if (!_cargada)
+        {
+            _cargada = true;
+            CargarFarmacias("LONCOCHE");
+        }
+    }
 
     private async void CargarFarmacias(string comuna)
     {
-        loadingIndicator.IsVisible = true;
-        listFarmacias.IsVisible = false;
-
-        // Configuración para omitir errores de certificado SSL (Común en sitios de gobierno)
-        var handler = new HttpClientHandler
-        {
-            ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
-        };
-
-        using HttpClient client = new HttpClient(handler);
-        client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0");
-
         try
         {
-            string url = "https://midas.minsal.cl/farmacia_v2/WS/getLocalesTurnos.php";
+            loadingIndicator.IsVisible = true;
+            listFarmacias.IsVisible = false;
 
-            // Descargamos el JSON como cadena para asegurar que no haya errores de formato
-            var jsonRaw = await client.GetStringAsync(url);
-
-            if (!string.IsNullOrWhiteSpace(jsonRaw))
+            // Configuración para omitir errores de certificado SSL (Común en sitios de gobierno)
+            var handler = new HttpClientHandler
             {
-                var respuesta = JsonSerializer.Deserialize<List<FarmaciaTurno>>(jsonRaw);
+                ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
+            };
 
-                if (respuesta != null)
+            using HttpClient client = new HttpClient(handler);
+            client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0");
+
+            try
+            {
+                string url = "https://midas.minsal.cl/farmacia_v2/WS/getLocalesTurnos.php";
+
+                // Descargamos el JSON como cadena para asegurar que no haya errores de formato
+                var jsonRaw = await client.GetStringAsync(url);
+
+                if (!string.IsNullOrWhiteSpace(jsonRaw))
                 {
-                    // Filtramos: Comuna en mayúsculas y quitamos espacios extra
-                    var filtradas = respuesta
-                        .Where(f => f.comuna_nombre.Trim().ToUpper() == comuna.Trim().ToUpper())
-                        .ToList();
+                    var respuesta = JsonSerializer.Deserialize<List<FarmaciaTurno>>(jsonRaw);
 
-                    MainThread.BeginInvokeOnMainThread(() => {
-                        listFarmacias.ItemsSource = filtradas;
+                    if (respuesta != null)
+                    {
+                        // Filtramos: Comuna en mayúsculas y quitamos espacios extra
+                        var filtradas = respuesta
+                            .Where(f => f.comuna_nombre.Trim().ToUpper() == comuna.Trim().ToUpper())
+                            .ToList();
 
-                        if (filtradas.Count == 0)
-                        {
-                            DisplayAlert("Sistema STI", $"No se encontraron farmacias de turno en {comuna} para hoy.", "OK");
-                        }
-                    });
+                        MainThread.BeginInvokeOnMainThread(() => {
+                            listFarmacias.ItemsSource = filtradas;
+
+                            if (filtradas.Count == 0)
+                            {
+                                try
+                                {
+                                    DisplayAlert("Sistema STI", $"No se encontraron farmacias de turno en {comuna} para hoy.", "OK");
+                                }
+                                catch {}
+                            }
+                        });
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+                try
+                {
+                    await DisplayAlert("Error de Conexión", $"No se pudo conectar con el MINSAL: {ex.Message}", "OK");
+                }
+                catch {}
+            }
+            finally
+            {
+                loadingIndicator.IsVisible = false;
+                listFarmacias.IsVisible = true;
+            }
         }
-        catch (Exception ex)
+        catch (Exception outerEx)
         {
-            await DisplayAlert("Error de Conexión", $"No se pudo conectar con el MINSAL: {ex.Message}", "OK");
-        }
-        finally
-        {
-            loadingIndicator.IsVisible = false;
-            listFarmacias.IsVisible = true;
+            System.Diagnostics.Debug.WriteLine($"Error crítico en CargarFarmacias: {outerEx.Message}");
         }
     }
 

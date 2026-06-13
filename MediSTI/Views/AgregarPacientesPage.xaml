@@ -5,7 +5,8 @@
              Title="Nuevo Registro">
 
     <VerticalStackLayout Padding="30" Spacing="15" VerticalOptions="Center">
-        <Label Text="👤 Nuevo Paciente" 
+        <Label x:Name="lblTitulo"
+               Text="👤 Nuevo Paciente" 
                FontSize="26" 
                FontAttributes="Bold" 
                TextColor="#2196F3" 
@@ -26,7 +27,8 @@
             <DatePicker x:Name="dtpFecha" Format="dd/MM/yyyy"/>
         </VerticalStackLayout>
 
-        <Button Text="Guardar Paciente" 
+        <Button x:Name="btnGuardar"
+                Text="Guardar Paciente" 
                 Clicked="OnGuardarClicked" 
                 BackgroundColor="#2196F3" 
                 TextColor="White"

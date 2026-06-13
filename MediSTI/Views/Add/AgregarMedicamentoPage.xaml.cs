@@ -18,6 +18,7 @@ public partial class AgregarMedicamentoPage : ContentPage
 
     // Bandera de seguridad para evitar crashes durante la inicialización
     private bool _isLoaded = false;
+    private bool _isRestoring = false;
 
 
     // Agregamos una variable para saber si estamos editando
@@ -48,7 +49,7 @@ public partial class AgregarMedicamentoPage : ContentPage
         }
 
 
-        if (tpPrimeraToma != null)
+        if (tpPrimeraToma != null && _medicamentoAEditar == null)
         {
             ActualizarHorariosAutomaticos();
         }
@@ -56,98 +57,188 @@ public partial class AgregarMedicamentoPage : ContentPage
     }
 
 
-    private void LlenarCamposParaEdicion()
+    private async void LlenarCamposParaEdicion()
     {
+        _isRestoring = true;
+
         txtNombre.Text = _medicamentoAEditar.Nombre;
         txtDosis.Text = _medicamentoAEditar.Dosis;
         txtFrecuencia.Text = _medicamentoAEditar.Frecuencia;
         dpInicio.Date = _medicamentoAEditar.FechaInicio;
         dpFin.Date = _medicamentoAEditar.FechaFin;
+        swEsAlarma.IsToggled = _medicamentoAEditar.EsAlarma;
 
-        // Aquí podrías marcar los botones de los días según _medicamentoAEditar.DiasSemana
-        // Y cargar sus horarios en _horariosTemporales
-    }
+        // 1. Restaurar días seleccionados
+        _diasSeleccionados.Clear();
+        if (!string.IsNullOrWhiteSpace(_medicamentoAEditar.DiasSemana))
+        {
+            if (_medicamentoAEditar.DiasSemana == "Todos")
+            {
+                swDias.IsToggled = false;
+                // Dejamos por defecto los días laborales pre-seleccionados por si vuelve a activar el switch
+                _diasSeleccionados.AddRange(new List<string> { "Lu", "Ma", "Mi", "Ju", "Vi" });
+            }
+            else
+            {
+                swDias.IsToggled = true;
+                var dias = _medicamentoAEditar.DiasSemana.Split(',').Select(d => d.Trim()).ToList();
+                _diasSeleccionados.AddRange(dias);
+            }
+        }
+        else
+        {
+            swDias.IsToggled = false;
+            _diasSeleccionados.AddRange(new List<string> { "Lu", "Ma", "Mi", "Ju", "Vi" });
+        }
+        ActualizarBotonesDias();
 
-    private async void OnGuardarClicked(object sender, EventArgs e)
-    {
-        // Bloqueamos el botón para evitar múltiples clics accidentales
-        var btn = (Button)sender;
-        btn.IsEnabled = false;
-
+        // 2. Restaurar horarios desde la base de datos
         try
         {
-            // Ejecutamos todo el procesamiento pesado en un hilo secundario
-            await Task.Run(async () =>
-            {
-                if (_medicamentoAEditar != null)
-                {
-                    // --- MODO ACTUALIZAR ---
-                    _medicamentoAEditar.Nombre = txtNombre.Text;
-                    _medicamentoAEditar.Dosis = txtDosis.Text;
-                    _medicamentoAEditar.Frecuencia = txtFrecuencia.Text;
-                    _medicamentoAEditar.DiasSemana = obtenerDiasSeleccionados();
-                    _medicamentoAEditar.FechaInicio = dpInicio?.Date ?? DateTime.Now;
-                    _medicamentoAEditar.FechaFin = dpFin?.Date ?? DateTime.Now;
+            var horarios = await _viewModel.Database.GetHorariosByMedicamentoAsync(_medicamentoAEditar.Id);
+            _horariosTemporales = horarios ?? new List<Horario>();
 
-                    // Actualiza en BD y re-programa notificaciones
-                    await _viewModel.ActualizarMedicamentoAsync(_medicamentoAEditar, _horariosTemporales);
+            // Pintar los chips de horarios
+            flexHoras.Children.Clear();
+            foreach (var h in _horariosTemporales)
+            {
+                AgregarChipVisual(h.Hora);
+            }
+
+            // Poner la primera toma en el timepicker si hay alguna
+            if (_horariosTemporales.Any())
+            {
+                var primera = _horariosTemporales.OrderBy(x => x.Hora).First();
+                tpPrimeraToma.Time = primera.Hora;
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error al restaurar horarios: {ex.Message}");
+        }
+
+        _isRestoring = false;
+    }
+
+    private void ActualizarBotonesDias()
+    {
+        if (stackDias == null) return;
+
+        foreach (var child in stackDias.Children)
+        {
+            if (child is Button button)
+            {
+                string dia = button.Text;
+                if (_diasSeleccionados.Contains(dia))
+                {
+                    button.BackgroundColor = Color.FromArgb("#1967B3");
+                    button.TextColor = Colors.White;
+                    button.BorderColor = Colors.Transparent;
+                    button.BorderWidth = 0;
                 }
                 else
                 {
-                    // --- MODO NUEVO ---
-                    if (string.IsNullOrWhiteSpace(txtNombre.Text))
-                    {
-                        // Volvemos al hilo principal solo para mostrar la alerta
-                        MainThread.BeginInvokeOnMainThread(async () => {
-                            await DisplayAlert("Error", "El nombre es obligatorio", "OK");
-                        });
-                        return;
-                    }
-
-                    var nuevoMed = new Medicamento
-                    {
-                        PacienteId = _pacienteId,
-                        Nombre = txtNombre.Text,
-                        Dosis = txtDosis.Text,
-                        DiasSemana = obtenerDiasSeleccionados(),
-                        Frecuencia = txtFrecuencia.Text,
-                        FechaInicio = dpInicio?.Date ?? DateTime.Now,
-                        FechaFin = dpFin?.Date ?? DateTime.Now
-                    };
-
-                    // 1. Guardar Medicamento y obtener su ID
-                    int medId = await _viewModel.GuardarMedicamentoAsync(nuevoMed);
-                    nuevoMed.Id = medId; // Aseguramos el ID para las notificaciones
-
-                    // 2. Guardar Horarios vinculados
-                    foreach (var h in _horariosTemporales)
-                    {
-                        h.MedicamentoId = medId;
-                        h.Activo = true;
-                        //await _viewModel.GuardarHorarioAsync(h);
-                        h.Id = await _viewModel.GuardarHorarioAsync(h);
-                    }
-
-                    // 3. Programar Notificaciones usando el nuevo servicio con BD
-                    // Pasamos _viewModel.Database para que pueda guardar los IDs por lote
-                    await NotificationService.ProgramarNotificacionesMedicamentoAsync(nuevoMed, _horariosTemporales, _viewModel.Database);
+                    button.BackgroundColor = Colors.White;
+                    button.TextColor = Colors.Gray;
+                    button.BorderColor = Colors.Gray;
+                    button.BorderWidth = 1;
                 }
-            });
+            }
+        }
+    }
 
-            // Una vez terminada la carga pesada, cerramos la pantalla de forma fluida
-            MainThread.BeginInvokeOnMainThread(async () =>
+        private async void OnGuardarClicked(object sender, EventArgs e)
+        {
+            // Bloqueamos el botón para evitar múltiples clics accidentales
+            var btn = (Button)sender;
+            btn.IsEnabled = false;
+
+            // Leemos todos los valores de la UI obligatoriamente en el hilo principal de UI
+            string nombre = txtNombre.Text?.Trim() ?? "";
+            string dosis = txtDosis.Text?.Trim() ?? "";
+            string frecuencia = txtFrecuencia.Text?.Trim() ?? "";
+            TimeSpan horaPrimeraToma = tpPrimeraToma?.Time ?? TimeSpan.Zero;
+            DateTime fechaInicio = (dpInicio?.Date ?? DateTime.Today).Date.Add(horaPrimeraToma);
+            DateTime fechaFin = dpFin?.Date ?? DateTime.Now;
+            bool esAlarma = swEsAlarma.IsToggled;
+            bool diasEspecificos = swDias.IsToggled;
+            string diasSemana = diasEspecificos ? obtenerDiasSeleccionados() : "Todos";
+
+            if (string.IsNullOrWhiteSpace(nombre))
             {
-            txtNombre?.Unfocus();
-            await Task.Delay(100); // Pequeño margen para la UI
-            await Navigation.PopModalAsync();
-        });
-    }
-    catch (Exception ex)
-    {
-        await DisplayAlert("Error STI", ex.Message, "OK");
-    btn.IsEnabled = true;
-    }
-}
+                await DisplayAlert("Error", "El nombre es obligatorio", "OK");
+                btn.IsEnabled = true;
+                return;
+            }
+
+            try
+            {
+                // Hacemos una copia local de los horarios temporales para evitar modificaciones concurrentes
+                var horariosCopias = _horariosTemporales.ToList();
+
+                // Ejecutamos todo el procesamiento pesado de base de datos y programación en un hilo secundario
+                await Task.Run(async () =>
+                {
+                    if (_medicamentoAEditar != null)
+                    {
+                        // --- MODO ACTUALIZAR ---
+                        _medicamentoAEditar.Nombre = nombre;
+                        _medicamentoAEditar.Dosis = dosis;
+                        _medicamentoAEditar.Frecuencia = frecuencia;
+                        _medicamentoAEditar.DiasSemana = diasSemana;
+                        _medicamentoAEditar.FechaInicio = fechaInicio;
+                        _medicamentoAEditar.FechaFin = fechaFin;
+                        _medicamentoAEditar.EsAlarma = esAlarma;
+
+                        // Actualiza en BD y re-programa notificaciones
+                        await _viewModel.ActualizarMedicamentoAsync(_medicamentoAEditar, horariosCopias);
+                    }
+                    else
+                    {
+                        // --- MODO NUEVO ---
+                        var nuevoMed = new Medicamento
+                        {
+                            PacienteId = _pacienteId,
+                            Nombre = nombre,
+                            Dosis = dosis,
+                            DiasSemana = diasSemana,
+                            Frecuencia = frecuencia,
+                            FechaInicio = fechaInicio,
+                            FechaFin = fechaFin,
+                            EsAlarma = esAlarma
+                        };
+
+                        // 1. Guardar Medicamento y obtener su ID
+                        int medId = await _viewModel.GuardarMedicamentoAsync(nuevoMed);
+                        nuevoMed.Id = medId; // Aseguramos el ID para las notificaciones
+
+                        // 2. Guardar Horarios vinculados
+                        foreach (var h in horariosCopias)
+                        {
+                            h.MedicamentoId = medId;
+                            h.Activo = true;
+                            h.Id = await _viewModel.GuardarHorarioAsync(h);
+                        }
+
+                        // 3. Programar Notificaciones usando el nuevo servicio con BD
+                        await NotificationService.ProgramarNotificacionesMedicamentoAsync(nuevoMed, horariosCopias, _viewModel.Database);
+                    }
+                });
+
+                // Una vez terminada la carga pesada, cerramos la pantalla de forma fluida en el hilo principal
+                MainThread.BeginInvokeOnMainThread(async () =>
+                {
+                    txtNombre?.Unfocus();
+                    await Task.Delay(100); // Pequeño margen para la UI
+                    await Navigation.PopModalAsync();
+                });
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Error STI", ex.Message, "OK");
+                btn.IsEnabled = true;
+            }
+        }
     
     private string obtenerDiasSeleccionados()
     {
@@ -175,7 +266,7 @@ public partial class AgregarMedicamentoPage : ContentPage
     private void ActualizarHorariosAutomaticos()
     {
         // FIREWALL: Si la página no ha cargado o faltan controles, abortamos para evitar el crash
-        if (!_isLoaded || flexHoras == null || tpPrimeraToma == null || txtFrecuencia == null)
+        if (!_isLoaded || flexHoras == null || tpPrimeraToma == null || txtFrecuencia == null || _isRestoring)
             return;
 
         flexHoras.Children.Clear();

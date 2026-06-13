@@ -1,4 +1,4 @@
-﻿using SQLite;
+using SQLite;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -21,6 +21,7 @@ namespace MediSTI.Models
         public DateTime FechaFin { get; set; }
 
         public string DiasSemana { get; set; }
+        public bool EsAlarma { get; set; } = false;
 
         [Ignore] // Esto le dice a SQLite que no cree una columna para esto
         public List<Horario> ListaHorarios { get; set; } = new List<Horario>();

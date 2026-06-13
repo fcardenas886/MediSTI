@@ -1,4 +1,4 @@
-﻿
+
 using MediSTI.Models;
 using SQLite;
 using System;
@@ -165,11 +165,10 @@ namespace MediSTI.Data
 
             var hoy = DateTime.Today;
 
-            return await _db.Table<Medicamento>()
-                             .Where(m => 
-                                         m.FechaInicio.Date <= hoy &&
-                                         m.FechaFin.Date >= hoy)
-                             .ToListAsync();
+            var todos = await _db.Table<Medicamento>().ToListAsync();
+            return todos
+                .Where(m => m.FechaInicio.Date <= hoy && m.FechaFin.Date >= hoy)
+                .ToList();
         }
 
         // Opcional: Método para obtener todos los registros de hoy (para estadísticas)
@@ -181,6 +180,53 @@ namespace MediSTI.Data
             return await _db.Table<Registro>()
                              .Where(r => r.FechaHora.Date == hoy)
                              .ToListAsync();
+        }
+
+        public async Task<List<RegistroDetalle>> GetHistorialCompletoAsync()
+        {
+            await Init();
+
+            var registros = await _db.Table<Registro>()
+                                     .OrderByDescending(r => r.FechaHora)
+                                     .ToListAsync();
+
+            var historial = new List<RegistroDetalle>();
+
+            foreach (var r in registros)
+            {
+                var horario = await _db.Table<Horario>()
+                                       .Where(h => h.Id == r.HorarioId)
+                                       .FirstOrDefaultAsync();
+
+                if (horario != null)
+                {
+                    var med = await _db.Table<Medicamento>()
+                                       .Where(m => m.Id == horario.MedicamentoId)
+                                       .FirstOrDefaultAsync();
+
+                    if (med != null)
+                    {
+                        var pac = await _db.Table<Paciente>()
+                                           .Where(p => p.Id == med.PacienteId)
+                                           .FirstOrDefaultAsync();
+
+                        historial.Add(new RegistroDetalle
+                        {
+                            Id = r.Id,
+                            HorarioId = r.HorarioId,
+                            FechaHora = r.FechaHora,
+                            Estado = r.Estado,
+                            Notas = r.Notas,
+                            MedicamentoNombre = med.Nombre ?? "Sin nombre",
+                            Dosis = med.Dosis ?? "",
+                            HoraProgramada = horario.Hora,
+                            PacienteNombre = pac?.Nombre ?? "Sin paciente"
+                        });
+                    }
+                }
+            }
+
+            return historial;
         }
 
         /// <summary>
@@ -206,10 +252,11 @@ namespace MediSTI.Data
                 _ => ""
             };
 
-            // 1 — Solo medicamentos activos hoy (dentro del período)
-            var medicamentos = await _db.Table<Medicamento>()
-                .Where(m => m.FechaInicio <= hoy && m.FechaFin >= hoy)
-                .ToListAsync();
+            // 1 — Obtener todos los medicamentos y filtrar de forma robusta por fecha en memoria
+            var todosMedicamentos = await _db.Table<Medicamento>().ToListAsync();
+            var medicamentos = todosMedicamentos
+                .Where(m => m.FechaInicio.Date <= hoy && m.FechaFin.Date >= hoy)
+                .ToList();
 
             // 2 — Filtrar por día de la semana
             medicamentos = medicamentos
@@ -234,6 +281,11 @@ namespace MediSTI.Data
 
                 foreach (var h in horarios)
                 {
+                    // Evitar mostrar tomas anteriores al inicio real del tratamiento
+                    var fechaHoraToma = hoy.Add(h.Hora);
+                    if (fechaHoraToma < med.FechaInicio)
+                        continue;
+
                     // 5 — Verificar si ya fue tomada hoy
                     var registros = await _db.Table<Registro>()
                         .Where(r => r.HorarioId == h.Id)
